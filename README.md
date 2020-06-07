@@ -1,6 +1,11 @@
 # CAFP
 Implementation of CAFP Algorithm
 
+### Prerequisites
+
+1. Installed Java version should be >= 8
+2. Dependency used : [guava-22.0.jar](https://mvnrepository.com/artifact/com.google.guava/guava/22.0) (Has been included in this project)
+
 ## HOW TO EXECUTE
 
 First <b>download</b> the <b>CAFP.jar</b> file.
@@ -16,6 +21,12 @@ Each of these parameters represent -- <br>
 <b>"output file path"</b>           : the output file path for saving the result (if null, the result will also be printed).<br>
 <b>"minsup value as a fraction"</b> : the minimum support threshold.<br>
  <br>
+
+For using it in editors -
+1.Clone this repository 
+2.Open it in your desired editor
+3.Build it using maven with goals clean and install
+4.As an example execute MainTest.java in main package.
 
 ## EXAMPLE
 To execute it download the <b>CAFP.jar</b> file , <b>sample.txt</b> and type the following command --<br>
