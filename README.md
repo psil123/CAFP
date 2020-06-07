@@ -2,6 +2,9 @@
 Implementation of CAFP Algorithm
 
 ## HOW TO EXECUTE
+
+First <b>download</b> the <b>CAFP.jar</b> file.
+
 Execution command --
 ```
 CAFP.jar "input file path" "delimiter" "output file path" "minsup value as a fraction"
