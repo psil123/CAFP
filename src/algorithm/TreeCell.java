@@ -11,8 +11,9 @@ import java.util.Map;
  */
 class TreeCell
 {
-	public long type;
-	public TNode root;
+	public long type;//the cell type
+	public TNode root;//the root node
+	
 	/**
 	 * Constructor
 	 * @param ch The type of the cell

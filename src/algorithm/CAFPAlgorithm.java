@@ -24,9 +24,7 @@ import helper.TDBReader;;
  * Paper Name
  * <br/><br/>
  * 
- * This is an optimized version that saves the result to a file
- * or keep it into memory if no output path is provided
- * by the user to the runAlgorithm method().
+ * It saves the result to a file and returns it to the user when runAlgorithm() is executed.
  *
  * @see TNode
  * @see TreeCell
@@ -41,6 +39,7 @@ public class CAFPAlgorithm
 	long minsup;//The minsup values
 	Map<Long,Long> FImap;//To store the count of each frequent item
 	Map<Long,TreeCell> CLAMap;//To store the CLA . Each Cell is mapped to its cell type in it.
+	Set<Set<Long>> outputTemp;//To store the output
 	
 	//A comparator to to order two items based on their frequency
 	private Comparator<Long> FIorderComparator=new Comparator<Long>(){
@@ -238,6 +237,7 @@ public class CAFPAlgorithm
 			channel.add(tempi,new Thread(()->CLAMap.get(tempi).add(entry.getKey(),entry.getValue())));
 		}
 		channel.shutdown();
+		
 		Map<Long, Map<Long, Long>> CPB=this.get_CPB();
 		Set<Set<Long>> FP=this.get_FP(CPB);
 
@@ -267,6 +267,7 @@ public class CAFPAlgorithm
 		System.out.println("Max memory : "+ m.getMaxMemory() +" MB");
 		System.out.println("Time taken : "+ (end-start) +" ms");
 		System.out.println("===========================================");
+		this.outputTemp=FP;
 		return FP;
 	}
 }

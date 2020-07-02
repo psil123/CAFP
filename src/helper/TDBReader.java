@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 /** 
  * 
- * This is responsible for reading the TDB file from the given input file
+ * This is responsible for reading the TDB from the given input file
  * @author Pritam Sil
  */
 public class TDBReader

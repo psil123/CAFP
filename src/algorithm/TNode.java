@@ -8,8 +8,9 @@ import java.util.List;
  */
 public class TNode
 {
-	public long type,count;
-	public List<TNode> child;
+	public long type;//the type of the node i.e. the item
+	public long count;// the count of that item
+	public List<TNode> child;//a list to store all the children of this node
 	/**
 	 * Constructor
 	 * @param ch the type of the Node
