@@ -100,6 +100,7 @@ public class CAFPAlgorithm
 	 */
 	void find_freq_item()
 	{
+		//create the FImap which maps each frequent item to its frquency.
 		Map<Long,Long> FImap=new HashMap<Long,Long>();
 		this.FImap=new HashMap<Long,Long>();
 		for(List<Long> s:TDB)
@@ -110,6 +111,7 @@ public class CAFPAlgorithm
 				else
 					FImap.put(i,(long)1);
 			}
+		//the lambda expression below filters out the elements whose frequency is less than the minsup value
 		this.FImap=FImap.entrySet().stream().filter(x->x.getValue()>=this.minsup).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));	
 	}
 	
@@ -117,25 +119,26 @@ public class CAFPAlgorithm
 	 * Method to convert the Transactional Database (TDB) into Dense Dataset (DDS)
 	 * @return the Dense Dataset
 	 */
-	Map<List<Long>, Long> get_CDS()
+	Map<List<Long>, Long> get_DDS()
 	{
-		Map<List<Long>,Long> ob=new TreeMap<List<Long>,Long>(this.ListLongComparator);
+		//create the DDS which maps each row to its frequency. The rows containing only the frequent items are added to the DDS. 
+		Map<List<Long>,Long> DDS=new TreeMap<List<Long>,Long>(this.ListLongComparator);
 		for(List<Long> i:TDB)
 		{
-			
+			//the lambda expression below filters out the elements whose frequency is less than the minsup value in a row
 			List<Long> temp=i.stream().filter(x->FImap.containsKey(x)).sorted(this.FIorderComparator).collect(Collectors.toList());
 			if(temp.size()==0)
 				continue;
-//			Collections.sort(temp,FIorderComparator);
-			if(!ob.containsKey(temp))
+			
+			if(!DDS.containsKey(temp))
 			{
 				CLAMap.put(temp.get(0),new TreeCell(i.get(0)));
-				ob.put(temp,(long)1);
+				DDS.put(temp,(long)1);
 			}
 			else
-				ob.put(temp,ob.get(temp)+1);
+				DDS.put(temp,DDS.get(temp)+1);
 		}
-		return ob;
+		return DDS;
 	}
 	
 	/**
@@ -145,7 +148,7 @@ public class CAFPAlgorithm
 	Map<Long, Map<Long, Long>> get_CPB()
 	{
 		Map<Long,Map<Long, Long>> CPB=new TreeMap<Long,Map<Long, Long>>();
-//		System.out.println(FImap);
+		// For each FI and for each FPTree , traverse along the tree and generate the CPB
 		for(Long ch:FImap.keySet())
 		{
 			Map<Long, Long> templ=new TreeMap<Long, Long>();
@@ -198,6 +201,8 @@ public class CAFPAlgorithm
 	Set<Set<Long>> get_FP(Map<Long,Map<Long, Long>> CPB)
 	{
 		Set<Set<Long>> out=new TreeSet<>(this.SetLongComparator);
+		// Here the CPB of each item has been taken and the item has been apended to each of the sets present in its CPB. 
+		// The resulting sets form our frequent itemsets and are apended to the output.  
 		for(Entry<Long, Map<Long, Long>> j:CPB.entrySet())
 		{
 			Set<Set<Long>> pow=powerSets(j.getValue().keySet());
@@ -225,21 +230,22 @@ public class CAFPAlgorithm
 		this.minsup=(long)Math.ceil(minsupp*TDB.size());
 		m.reset();
 		long start = System.currentTimeMillis();
-		find_freq_item();
+		find_freq_item(); // generate the FImap containing the frequency of each frequent item
 		m.checkUsage();
-		Map<List<Long>, Long> CDS=get_CDS();
+		Map<List<Long>, Long> DDS=get_DDS(); // generate the DDS
 		m.checkUsage();
 		
-		ThreadChannel channel=new ThreadChannel(FImap.keySet());
-		for (Map.Entry<List<Long>,Long> entry : CDS.entrySet())
+		ThreadChannel channel=new ThreadChannel(FImap.keySet());// To maintain a separate thread pool for each FP-Tree in our FP-Forest
+		for (Map.Entry<List<Long>,Long> entry : DDS.entrySet())
 		{
 			long tempi=entry.getKey().get(0);
+			// All the items are added to an FP-Tree in separate threads which are added to their corresponding threadpools present in ThreadChannel.
 			channel.add(tempi,new Thread(()->CLAMap.get(tempi).add(entry.getKey(),entry.getValue())));
 		}
-		channel.shutdown();
+		channel.shutdown(); // close all ThreadPools in channel and ensure that all items have been added
 		
-		Map<Long, Map<Long, Long>> CPB=this.get_CPB();
-		Set<Set<Long>> FP=this.get_FP(CPB);
+		Map<Long, Map<Long, Long>> CPB=this.get_CPB();// generate the CPB
+		Set<Set<Long>> FP=this.get_FP(CPB);//generate the FPs
 
 		long end = System.currentTimeMillis();
 		if(output==null)

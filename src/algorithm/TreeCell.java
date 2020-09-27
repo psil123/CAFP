@@ -31,6 +31,8 @@ class TreeCell
 	 */
 	public void add(List<Long> list,long count)
 	{
+		// If the tree is empty then traverse along the list and create a node for each of the items present in it.
+		// This will form the first branch of the tree.
 		if(root==null)
 		{
 			Iterator<Long> i=list.iterator();
@@ -44,6 +46,8 @@ class TreeCell
 			}
 			
 		}
+		//If the tree is not empty, traverse along the branch whose each item is matching with the list and update the count in each node.
+		//If there is a mismatch at any index start creating new nodes for each item.
 		else
 		{
 			TNode temp=root;
@@ -82,6 +86,8 @@ class TreeCell
 	 */
 	public void traverseCPB(TNode temp,List<Long> s,Map<Long,Long> map,long search)
 	{
+		// If the item in the current node is same as the search item, add the path traversed to the map and update its count
+		// This generates the CPB for each FI
 		if(temp.type==search)
 		{
 			if(s.size()!=1)
@@ -96,6 +102,7 @@ class TreeCell
 				}
 			}
 		}
+		// For each child of the current node, add the current node's item to the list of visited nodes and then traverse along the child nodes 
 		for(TNode i:temp.child)
 		{
 			List<Long> temp1=new ArrayList<Long>();
