@@ -39,7 +39,7 @@ public class CAFPAlgorithm
 	long minsup;//The minsup values
 	Map<Long,Long> FImap;//To store the count of each frequent item
 	Map<Long,TreeCell> CLAMap;//To store the CLA . Each Cell is mapped to its cell type in it.
-	Set<Set<Long>> outputTemp;//To store the output
+	Map<Set<Long>, Long> outputTemp;//To store the output
 	
 	//A comparator to to order two items based on their frequency
 	private Comparator<Long> FIorderComparator=new Comparator<Long>(){
@@ -77,6 +77,7 @@ public class CAFPAlgorithm
 		@Override
 		public int compare(List<Long> o1, List<Long> o2)
 		{
+//			System.out.println("Comparing : "+o1+" "+o2);
 			if(o1.size()>o2.size())
 				return 1;
 			else if(o1.size()<o2.size())
@@ -145,13 +146,15 @@ public class CAFPAlgorithm
 	 * Method to generate the Conditional Pattern Base (CPB).
 	 * @return A map in which each frequent item(FI) is mapped to its CPB
 	 */
-	Map<Long, Map<Long, Long>> get_CPB()
+//	Map<Long, Map<Long, Long>> get_CPB()
+	Map<Long,Map<List<Long>, Long>> get_CPB()
 	{
-		Map<Long,Map<Long, Long>> CPB=new TreeMap<Long,Map<Long, Long>>();
+		Map<Long,Map<List<Long>, Long>> CPB=new TreeMap<Long,Map<List<Long>, Long>>();
 		// For each FI and for each FPTree , traverse along the tree and generate the CPB
 		for(Long ch:FImap.keySet())
 		{
-			Map<Long, Long> templ=new TreeMap<Long, Long>();
+//			Map<List<Long>, Long> templ=new TreeMap<List<Long>, Long>(this.ListLongComparator);
+			Map<List<Long>, Long> templ=new HashMap<List<Long>, Long>();
 			for(TreeCell i:CLAMap.values())
 			{
 				if(i.root==null)
@@ -160,22 +163,24 @@ public class CAFPAlgorithm
 				temp1.add(i.root.type);
 				i.traverseCPB(i.root,temp1,templ, ch);
 			}
-			templ = templ.entrySet().stream()
-					.filter(x -> x.getValue()>=this.minsup)
-					.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
-				CPB.put(ch,templ);
+//			templ = templ.entrySet().stream()
+//					.filter(x -> x.getValue()>=this.minsup)
+//					.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+				if(templ.size()>0)
+					CPB.put(ch,templ);
 		}
+//		System.out.println(CPB);
 		return CPB;
 	}
 	
 	/**
 	 * Method to return the powerSet of a given set
+	 * @param <T>
 	 * @param originalSet a set
 	 * @return the powerset of the given set
 	 * @throws IOException exception if error reading or writing files
 	 */
-	public static <T> Set<Set<T>> powerSets(Set<T> originalSet)
-	{
+	public  <T> Set<Set<T>> powerSet(Set<T> originalSet) {
 	    Set<Set<T>> sets = new HashSet<Set<T>>();
 	    if (originalSet.isEmpty()) {
 	        sets.add(new HashSet<T>());
@@ -184,7 +189,7 @@ public class CAFPAlgorithm
 	    List<T> list = new ArrayList<T>(originalSet);
 	    T head = list.get(0);
 	    Set<T> rest = new HashSet<T>(list.subList(1, list.size())); 
-	    for (Set<T> set : powerSets(rest)) {
+	    for (Set<T> set : powerSet(rest)) {
 	        Set<T> newSet = new HashSet<T>();
 	        newSet.add(head);
 	        newSet.addAll(set);
@@ -192,29 +197,83 @@ public class CAFPAlgorithm
 	        sets.add(set);
 	    }       
 	    return sets;
-	}
+	} 
 	/**
 	 * Method to generate the Frequent Patterns from the CPB(Conditional Pattern Base)
 	 * @param CPB the Conditional Pattern Base
 	 * @return a set of all the frequent patterns
 	 */
-	Set<Set<Long>> get_FP(Map<Long,Map<Long, Long>> CPB)
+	Map<Set<Long>, Long> get_filtered_CPB(Map<Long,Map<List<Long>, Long>> CPB)
 	{
-		Set<Set<Long>> out=new TreeSet<>(this.SetLongComparator);
+//		Map<Set<Long>,Long> out=new TreeMap<Set<Long>,Long>(this.SetLongComparator);
+		Map<Set<Long>,Long> out=new HashMap<Set<Long>,Long>();
 		// Here the CPB of each item has been taken and the item has been apended to each of the sets present in its CPB. 
 		// The resulting sets form our frequent itemsets and are apended to the output.  
-		for(Entry<Long, Map<Long, Long>> j:CPB.entrySet())
+		for(Entry<Long, Map<List<Long>, Long>> j:CPB.entrySet())
 		{
-			Set<Set<Long>> pow=powerSets(j.getValue().keySet());
-			for(Set<Long> kk:pow)
+//			System.out.println("Processing : "+j);
+			Set<Set<List<Long>>> pow=powerSet(j.getValue().keySet());
+//			System.out.println(pow);
+			for(Set<List<Long>> kk:pow)
 			{
-				kk.add(j.getKey());
-				out.add(kk);
+//				System.out.println("Power Processing : "+kk);
+				if(kk.size()==0)
+					continue;
+				List<List<Long>> templ=new ArrayList<List<Long>>(kk);
+//				System.out.println("Power Processing templ : "+templ);
+				Set<Long> temp=new HashSet<>(templ.get(0));
+				if(templ.size()==1)
+				{
+//					continue;
+//					System.out.println("Cur : "+j.getValue()+" "+templ.get(0)+" "+j.getValue().get(templ.get(0)));
+					long val=j.getValue().get(templ.get(0));
+					if(val<this.minsup)
+						continue;
+					temp.add(j.getKey());
+					out.put(temp,val);
+				}
+				else
+				{
+//					System.out.println("Cur : "+j.getValue()+" "+templ.get(0)+" "+j.getValue().get(templ.get(0)));
+					temp.retainAll(new HashSet<>(templ.get(1)));
+					long val=j.getValue().get(templ.get(0))+j.getValue().get(templ.get(1));
+					for(int i=2;i<templ.size();i++)
+					{
+						temp.retainAll(new HashSet<>(templ.get(i)));
+						val+=j.getValue().get(templ.get(i));
+					}
+					if(temp.size()==0 || val<this.minsup)
+						continue;
+					temp.add(j.getKey());
+					out.put(temp,val);
+				}
 			}
+//			System.out.println("Out Now : "+out);
 		}
+//		return null;
 		return out;
 	}
 	
+	Map<Set<Long>, Long> get_FP(Map<Set<Long>, Long>  CPB)
+	{
+		Map<Set<Long>, Long>  out=new HashMap<Set<Long>, Long>(CPB);
+		
+		for(Entry<Set<Long>, Long> i:CPB.entrySet())
+		{
+			Set<Set<Long>> temp=this.powerSet(i.getKey());
+			for(Set<Long> j:temp)
+			{
+				if(j.size()<2)
+					continue;
+				if(out.containsKey(j))
+					out.put(j,Math.max(i.getValue(),out.get(j)));
+				else
+					out.put(j,i.getValue());
+			}
+		}
+//		System.out.println(out);
+		return out;
+	}
 	/**
 	 * Method to run the CAFP algorithm.
 	 * @param input the path to an input file containing a transaction database.
@@ -224,10 +283,11 @@ public class CAFPAlgorithm
 	 * @return the result which is a set containing a set of each Frequent Pattern
 	 * @throws Exception IOException if there is an issue while reading the files.InterruptedExcetion if there is an issue with the threads
 	 */
-	public Set<Set<Long>> runAlgorithm(String input,String delim,String output,double minsupp) throws Exception
+	public Map<Set<Long>, Long> runAlgorithm(String input,String delim,String output,double minsupp) throws Exception
 	{
 		this.TDB=new TDBReader().readFromFile(input,delim);
 		this.minsup=(long)Math.ceil(minsupp*TDB.size());
+//		System.out.println(minsup);
 		m.reset();
 		long start = System.currentTimeMillis();
 		find_freq_item(); // generate the FImap containing the frequency of each frequent item
@@ -244,26 +304,26 @@ public class CAFPAlgorithm
 		}
 		channel.shutdown(); // close all ThreadPools in channel and ensure that all items have been added
 		
-		Map<Long, Map<Long, Long>> CPB=this.get_CPB();// generate the CPB
-		Set<Set<Long>> FP=this.get_FP(CPB);//generate the FPs
-
+		Map<Long, Map<List<Long>, Long>> CPB=this.get_CPB();// generate the CPB
+		Map<Set<Long>, Long> CPB1=this.get_filtered_CPB(CPB);
+		Map<Set<Long>, Long> FP=this.get_FP(CPB1);
 		long end = System.currentTimeMillis();
 		if(output==null)
 		{
 			System.out.println("Following are the Frequent Patterns ---");
-			FP.forEach(i->System.out.println(i));
+			FP.forEach((k,v)->System.out.println(k.toString().replace("[","").replace("]","").replace(", ",",")+",#SUP="+v));
 		}
 		else
 		{
 			FileWriter outFile = new FileWriter(output);
-			FP.forEach(i->
-				{
-					try {
-						outFile.write(i.toString().replace("[","").replace("]","").replace(","," ")+"\n");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				});
+			FP.forEach((k,v)->{
+				try {
+					outFile.write(k.toString().replace("[","").replace("]","").replace(", ",",")+",#SUP="+v+"\n");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			});
 			outFile.close();
 		}
 		System.out.println("==================Summary==================");

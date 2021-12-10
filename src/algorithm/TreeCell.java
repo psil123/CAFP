@@ -84,22 +84,28 @@ class TreeCell
 	 * @param map A map to store the CPB
 	 * @param search The item whose CPB is to be generated
 	 */
-	public void traverseCPB(TNode temp,List<Long> s,Map<Long,Long> map,long search)
+	public void traverseCPB(TNode temp,List<Long> s,Map<List<Long>,Long> map,long search)
 	{
 		// If the item in the current node is same as the search item, add the path traversed to the map and update its count
 		// This generates the CPB for each FI
+		//System.out.println("Path : "+s);
 		if(temp.type==search)
-		{
+		{//System.out.println("Added : "+s+" " +temp.count+" "+temp.type);
 			if(s.size()!=1)
 			{
-				for(int i=0;i<s.size()-1;i++)
-				{
-					long ch=s.get(i);
-					if(map.containsKey(ch))
-						map.put(ch,map.get(ch)+temp.count);
-					else
-						map.put(ch,temp.count);
-				}
+//				for(int i=0;i<s.size()-1;i++)
+//				{
+//					long ch=s.get(i);
+//					if(map.containsKey(ch))
+//						map.put(ch,map.get(ch)+temp.count);
+//					else
+//						map.put(ch,temp.count);
+//				}
+				s=s.subList(0,s.size()-1);
+				if(map.containsKey(s))
+					map.put(s,map.get(s)+temp.count);
+				else
+					map.put(s,temp.count);
 			}
 		}
 		// For each child of the current node, add the current node's item to the list of visited nodes and then traverse along the child nodes 
