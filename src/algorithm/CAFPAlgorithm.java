@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 
 import helper.MemoryTracker;
+import helper.PowerSet;
 import helper.TDBReader;;
 /** 
  * This is an implementation of the CAFP algorithm.
@@ -88,6 +91,23 @@ public class CAFPAlgorithm
 		}
 		
 	};
+	
+	//A comparator to compare between two lists
+	private Comparator<Entry<Set<Long>,Set<Long>>> 
+		coverComp=new Comparator<Entry<Set<Long>,Set<Long>>>()
+	{
+		public int compare(Entry<Set<Long>, Set<Long>> o1, Entry<Set<Long>, Set<Long>> o2)
+		{
+			if(o1.getKey().containsAll(o2.getKey()) && 
+					o1.getValue().containsAll(o2.getValue()))
+			{
+				return 0;
+			}
+
+			return 1;
+		}
+		
+	};
 	/**
 	 * Constructor
 	 */
@@ -149,7 +169,7 @@ public class CAFPAlgorithm
 //	Map<Long, Map<Long, Long>> get_CPB()
 	Map<Long,Map<List<Long>, Long>> get_CPB()
 	{
-		Map<Long,Map<List<Long>, Long>> CPB=new TreeMap<Long,Map<List<Long>, Long>>();
+		Map<Long,Map<List<Long>, Long>> CPB=new HashMap<Long,Map<List<Long>, Long>>();
 		// For each FI and for each FPTree , traverse along the tree and generate the CPB
 		for(Long ch:FImap.keySet())
 		{
@@ -169,7 +189,7 @@ public class CAFPAlgorithm
 				if(templ.size()>0)
 					CPB.put(ch,templ);
 		}
-//		System.out.println(CPB);
+		System.out.println(CPB);
 		return CPB;
 	}
 	
@@ -180,7 +200,7 @@ public class CAFPAlgorithm
 	 * @return the powerset of the given set
 	 * @throws IOException exception if error reading or writing files
 	 */
-	public  <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+	public  <T> Set<Set<T>> powerSet_rec(Set<T> originalSet) {
 	    Set<Set<T>> sets = new HashSet<Set<T>>();
 	    if (originalSet.isEmpty()) {
 	        sets.add(new HashSet<T>());
@@ -197,7 +217,36 @@ public class CAFPAlgorithm
 	        sets.add(set);
 	    }       
 	    return sets;
+	}
+	
+	public  <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+	    Set<Set<T>> sets = new HashSet<Set<T>>();
+	    if (originalSet.isEmpty()) {
+	        sets.add(new HashSet<T>());
+	        return sets;
+	    }
+	    List<T> temp=new ArrayList<T>(originalSet);
+	    long max=(long)Math.pow(2,originalSet.size());
+	    
+	    for(long i=1;i<max;i++)
+	    {
+	    	Set<T> item=new HashSet<T>();
+	    	String s=Long.toBinaryString(i);
+	    	String k="";
+	    	if(s.length()<originalSet.size())
+	    		for(int j=s.length();j<originalSet.size();j++)
+	    			k+="0";
+	    	s=k+s;
+//	    	System.out.println(s);
+	    	for(int j=0;j<s.length();j++)
+	    		if(s.charAt(j)=='1')
+	    			item.add(temp.get(j));
+	    	sets.add(item);
+	    }
+//	    System.out.println("Orig : "+originalSet+"\nSUB : "+sets.size());
+	    return sets;
 	} 
+	
 	/**
 	 * Method to generate the Frequent Patterns from the CPB(Conditional Pattern Base)
 	 * @param CPB the Conditional Pattern Base
@@ -212,10 +261,13 @@ public class CAFPAlgorithm
 		for(Entry<Long, Map<List<Long>, Long>> j:CPB.entrySet())
 		{
 //			System.out.println("Processing : "+j);
-			Set<Set<List<Long>>> pow=powerSet(j.getValue().keySet());
+			PowerSet<List<Long>> pow=new PowerSet<List<Long>>(j.getValue().keySet(),1,j.getValue().size());
+//			Set<Set<List<Long>>> pow=powerSet(j.getValue().keySet());
 //			System.out.println(pow);
-			for(Set<List<Long>> kk:pow)
+//			for(Set<List<Long>> kk:pow)
+			while(pow.hasNext())
 			{
+				List<List<Long>> kk=(LinkedList<List<Long>>)pow.next();
 //				System.out.println("Power Processing : "+kk);
 				if(kk.size()==0)
 					continue;
@@ -248,21 +300,26 @@ public class CAFPAlgorithm
 					out.put(temp,val);
 				}
 			}
-//			System.out.println("Out Now : "+out);
+			
 		}
 //		return null;
+		System.out.println("Out Now : "+out);
 		return out;
 	}
 	
 	Map<Set<Long>, Long> get_FP(Map<Set<Long>, Long>  CPB)
 	{
+		
 		Map<Set<Long>, Long>  out=new HashMap<Set<Long>, Long>(CPB);
 		
 		for(Entry<Set<Long>, Long> i:CPB.entrySet())
 		{
-			Set<Set<Long>> temp=this.powerSet(i.getKey());
-			for(Set<Long> j:temp)
+//			Set<Set<Long>> temp=this.powerSet(i.getKey());
+			PowerSet<Long> temp=new PowerSet<Long>(i.getKey(),1,i.getKey().size());
+//			for(Set<Long> j:temp)
+			while(temp.hasNext())
 			{
+				Set<Long> j=new HashSet<Long>((LinkedList<Long>)temp.next());
 				if(j.size()<2)
 					continue;
 				if(out.containsKey(j))
@@ -271,7 +328,7 @@ public class CAFPAlgorithm
 					out.put(j,i.getValue());
 			}
 		}
-//		System.out.println(out);
+		System.out.println(out);
 		return out;
 	}
 	/**
