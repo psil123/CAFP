@@ -1,6 +1,7 @@
 package algorithm;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -209,7 +210,7 @@ public class CAFPAlgorithm
 	    List<T> list = new ArrayList<T>(originalSet);
 	    T head = list.get(0);
 	    Set<T> rest = new HashSet<T>(list.subList(1, list.size())); 
-	    for (Set<T> set : powerSet(rest)) {
+	    for (Set<T> set : powerSet_rec(rest)) {
 	        Set<T> newSet = new HashSet<T>();
 	        newSet.add(head);
 	        newSet.addAll(set);
@@ -219,19 +220,21 @@ public class CAFPAlgorithm
 	    return sets;
 	}
 	
-	public  <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+	public  <T> Set<Set<T>> powerSets(Set<T> originalSet) {
 	    Set<Set<T>> sets = new HashSet<Set<T>>();
 	    if (originalSet.isEmpty()) {
 	        sets.add(new HashSet<T>());
 	        return sets;
 	    }
 	    List<T> temp=new ArrayList<T>(originalSet);
-	    long max=(long)Math.pow(2,originalSet.size());
+//	    long max=(long)Math.pow(2,originalSet.size());
 	    
-	    for(long i=1;i<max;i++)
+	    BigInteger max=BigInteger.TWO.pow(originalSet.size());
+	    for(BigInteger i=BigInteger.ONE;i.compareTo(max)==-1;i=i.add(BigInteger.ONE))
 	    {
 	    	Set<T> item=new HashSet<T>();
-	    	String s=Long.toBinaryString(i);
+	    	String s=i.toString(2);
+//	    	System.out.println("Generating Bin string "+s);
 	    	String k="";
 	    	if(s.length()<originalSet.size())
 	    		for(int j=s.length();j<originalSet.size();j++)
@@ -261,13 +264,14 @@ public class CAFPAlgorithm
 		for(Entry<Long, Map<List<Long>, Long>> j:CPB.entrySet())
 		{
 //			System.out.println("Processing : "+j);
-			PowerSet<List<Long>> pow=new PowerSet<List<Long>>(j.getValue().keySet(),1,j.getValue().size());
-//			Set<Set<List<Long>>> pow=powerSet(j.getValue().keySet());
+//			PowerSet<List<Long>> pow=new PowerSet<List<Long>>(j.getValue().keySet(),1,j.getValue().size());
+			Set<Set<List<Long>>> pow=Sets.powerSet(j.getValue().keySet());
+//			Set<Set<List<Long>>> pow=powerSets(j.getValue().keySet());
 //			System.out.println(pow);
-//			for(Set<List<Long>> kk:pow)
-			while(pow.hasNext())
+			for(Set<List<Long>> kk:pow)
+//			while(pow.hasNext())
 			{
-				List<List<Long>> kk=(LinkedList<List<Long>>)pow.next();
+//				List<List<Long>> kk=(LinkedList<List<Long>>)pow.next();
 //				System.out.println("Power Processing : "+kk);
 				if(kk.size()==0)
 					continue;
@@ -314,12 +318,13 @@ public class CAFPAlgorithm
 		
 		for(Entry<Set<Long>, Long> i:CPB.entrySet())
 		{
-//			Set<Set<Long>> temp=this.powerSet(i.getKey());
-			PowerSet<Long> temp=new PowerSet<Long>(i.getKey(),1,i.getKey().size());
-//			for(Set<Long> j:temp)
-			while(temp.hasNext())
+//			Set<Set<Long>> temp=this.powerSets(i.getKey());
+//			PowerSet<Long> temp=new PowerSet<Long>(i.getKey(),1,i.getKey().size());
+			Set<Set<Long>> temp=Sets.powerSet(i.getKey());
+			for(Set<Long> j:temp)
+//			while(temp.hasNext())
 			{
-				Set<Long> j=new HashSet<Long>((LinkedList<Long>)temp.next());
+//				Set<Long> j=new HashSet<Long>((LinkedList<Long>)temp.next());
 				if(j.size()<2)
 					continue;
 				if(out.containsKey(j))
@@ -360,10 +365,14 @@ public class CAFPAlgorithm
 			channel.add(tempi,new Thread(()->CLAMap.get(tempi).add(entry.getKey(),entry.getValue())));
 		}
 		channel.shutdown(); // close all ThreadPools in channel and ensure that all items have been added
-		
+		System.out.println("Generating CPB");
+		m.checkUsage();
 		Map<Long, Map<List<Long>, Long>> CPB=this.get_CPB();// generate the CPB
+		m.checkUsage();
 		Map<Set<Long>, Long> CPB1=this.get_filtered_CPB(CPB);
+		m.checkUsage();
 		Map<Set<Long>, Long> FP=this.get_FP(CPB1);
+		m.checkUsage();
 		long end = System.currentTimeMillis();
 		if(output==null)
 		{
