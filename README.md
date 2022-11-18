@@ -34,4 +34,4 @@ To execute it download the <b>CAFP.jar</b> file , <b>sample.txt</b> and type the
 CAFP.jar "sample.txt" " " "output.txt"  0.5
 ```
 ## ORIGINAL PAPER
-* **Moumita Ghosh, Anirban Roy, Pritam Sil, Kartck Chandra Mondal** - *Frequent Itemset Mining Using FP-Tree: A CLA-based Approach and Its Extended Application in Biodiversity* - [Link To Paper](https://link.springer.com/article/10.1007/s11334-022-00500-3)
+* **Moumita Ghosh, Anirban Roy, Pritam Sil, Kartick Chandra Mondal** - *Frequent Itemset Mining Using FP-Tree: A CLA-based Approach and Its Extended Application in Biodiversity* - [Link To Paper](https://link.springer.com/article/10.1007/s11334-022-00500-3)
