@@ -22,11 +22,11 @@ Each of these parameters represent -- <br>
 <b>"minsup value as a fraction"</b> : the minimum support threshold.<br>
  <br>
 
-For using it in editors -
-1.Clone this repository 
-2.Open it in your desired editor
-3.Build it using maven with goals clean and install
-4.As an example execute MainTest.java in main package.
+For using it in editors - <br>
+1.Clone this repository <br>
+2.Open it in your desired editor <br>
+3.Build it using maven with goals clean and install <br>
+4.As an example execute MainTest.java in main package. <br>
 
 ## EXAMPLE
 To execute it download the <b>CAFP.jar</b> file , <b>sample.txt</b> and type the following command --<br>
